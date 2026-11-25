@@ -1,0 +1,46 @@
+#:schema https://mise.jdx.dev/schema/mise.json
+
+# Cloud CLI is optional. Credential login is NOT part of bootstrap.
+[tools]
+# The workstation Python is pinned to gcloud's required 3.14 minor. Install it
+# before gcloud so the macOS archive backend never tries an invisible sudo prompt.
+gcloud = { version = "latest", depends = ["python"] }
+
+[tasks."cloud:auth"]
+description = "Interactive login for gcloud user CLI"
+run = "gcloud auth login"
+
+[tasks."cloud:adc"]
+description = "Interactive Application Default Credentials login"
+run = "gcloud auth application-default login"
+
+[tasks."cloud:adc-status"]
+description = "Verify ADC can mint a token without displaying it"
+run = "gcloud auth application-default print-access-token >/dev/null"
+
+[tasks."cloud:auth-revoke"]
+description = "Interactively revoke a selected gcloud CLI identity; changes authentication state"
+run = "gcloud auth revoke"
+
+[tasks."cloud:adc-revoke"]
+description = "Revoke local Application Default Credentials and delete their credential file"
+run = "gcloud auth application-default revoke"
+
+[tasks."cloud:python-check"]
+description = "Show gcloud Python location and selected mise Python"
+run = ["python --version", "gcloud info --format='value(basic.python_location)'"]
+
+[tasks."cloud:auth-status"]
+description = "List gcloud authenticated accounts (not credential contents)"
+run = "gcloud auth list --filter=status:ACTIVE --format='value(account)'"
+
+[doctor.checks.gcloud]
+description = "Google Cloud CLI is installed and launchable"
+run = "gcloud --version"
+hint = "Select cloud and run mise bootstrap. Check gcloud's installation backend and Python policy."
+
+[doctor.checks.gcloud-auth]
+description = "A gcloud user account is selected"
+depends = ["gcloud"]
+run = 'test -n "$(gcloud auth list --filter=status:ACTIVE --format="value(account)" 2>/dev/null)"'
+hint = "Run mise run cloud:auth, then choose a project/account"

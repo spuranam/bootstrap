@@ -1,0 +1,53 @@
+#:schema https://mise.jdx.dev/schema/mise.json
+
+# Automatically selected when auto_env = true.
+[bootstrap.packages]
+"brew:binutils" = "latest"
+"brew:coreutils" = "latest"
+"brew:findutils" = "latest"
+"brew:gawk" = "latest"
+"brew:git" = "latest"
+"brew:gnu-getopt" = "latest"
+"brew:gnu-sed" = "latest"
+"brew:gnu-tar" = "latest"
+"brew:grep" = "latest"
+"brew:make" = "latest"
+"brew:openssl@3" = "latest"
+"brew:zsh-completions" = "latest"
+
+# gcloud's archive backend needs a matching Python minor. The foundation installs
+# mise Python 3.14.10 before gcloud; this exact-version path avoids hidden sudo prompts.
+[env]
+CLOUDSDK_PYTHON = "{{ env.HOME }}/.local/share/mise/installs/python/3.14.10/bin/python"
+
+[bootstrap.mise_shell_activate]
+zsh = true
+
+[dotfiles]
+# mise's activation blocks use bare `mise`; support the official installer
+# location and an existing user-managed ~/bin. The reviewed macOS workstation
+# policy intentionally prefers GNU command names and Homebrew's developer CLIs.
+"~/.zshenv/mise-path" = { block = 'export PATH="$HOME/.local/bin:$HOME/bin:/opt/homebrew/opt/coreutils/libexec/gnubin:/opt/homebrew/opt/gnu-tar/libexec/gnubin:/opt/homebrew/opt/gnu-sed/libexec/gnubin:/opt/homebrew/opt/gawk/libexec/gnubin:/opt/homebrew/opt/findutils/libexec/gnubin:/opt/homebrew/opt/grep/libexec/gnubin:/opt/homebrew/opt/make/libexec/gnubin:/opt/homebrew/opt/gnu-getopt/bin:/opt/homebrew/opt/binutils/bin:/opt/homebrew/opt/openssl@3/bin:/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"' }
+# Homebrew and zsh-completions definitions must be visible before Oh My Zsh
+# initializes completion.
+"~/.zprofile/homebrew-completions" = { block = '''
+typeset -U fpath
+fpath=(/opt/homebrew/share/zsh-completions /opt/homebrew/share/zsh/site-functions $fpath)
+''' }
+# Keep device/organization-specific shell customization outside this repository.
+# The real ~/.zshrc remains a regular file so mise can manage its activation block.
+"~/.zshrc/local-config" = { line = '[[ -r "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"', position = "prepend" }
+
+[tasks."macos:brew-check"]
+description = "Check declared formulae and GNU-first macOS command discovery"
+run = '''
+mise bootstrap packages status
+for command in awk date find getopt grep ls make objdump openssl sed tar xargs; do
+  resolved="$(command -v "$command")"
+  case "$resolved" in
+    /opt/homebrew/opt/*) printf '%-8s %s\n' "$command" "$resolved" ;;
+    *) printf 'Expected Homebrew GNU/developer command for %s; found %s\n' "$command" "$resolved" >&2; exit 1 ;;
+  esac
+done
+'''
+

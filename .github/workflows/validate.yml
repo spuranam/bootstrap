@@ -1,0 +1,63 @@
+name: Validate mise workstation configuration
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  docs:
+    runs-on: ubuntu-24.04
+    env:
+      MISE_CONFIG_DIR: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v4
+        with:
+          install: false
+      - name: Install pinned documentation validation tools
+        run: mise install node@26 npm:markdownlint-cli@0.47.0
+      - name: Validate Markdown, Agent Skills, and catalog
+        run: mise run verify:skills
+
+  config:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+        modules: ["", "desktop,ai,cloud,bitwarden", "cloud,kubernetes,supply-chain"]
+    runs-on: ${{ matrix.os }}
+    env:
+      MISE_CONFIG_DIR: ${{ github.workspace }}
+      MISE_ENV: ${{ matrix.modules }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v4
+        with:
+          install: false
+      - name: Parse effective configuration
+        run: |
+          mise --version
+          mise config ls
+          mise tasks validate
+      - name: Preview without changing machine
+        run: mise bootstrap --dry-run --skip task
+
+  fedora:
+    runs-on: ubuntu-24.04
+    container: fedora:43
+    env:
+      MISE_CONFIG_DIR: ${{ github.workspace }}
+      MISE_ENV: cloud,kubernetes,supply-chain
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install minimum bootstrap dependencies
+        run: dnf install -y curl git tar gzip ca-certificates
+      - name: Install mise CLI (CI only)
+        run: |
+          curl -fsSL https://mise.run | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Validate Fedora config
+        run: |
+          mise config ls
+          mise tasks validate
+          mise bootstrap --dry-run --skip task

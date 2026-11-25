@@ -1,0 +1,16 @@
+#:schema https://mise.jdx.dev/schema/mise.json
+
+[tools]
+cosign = "latest"
+syft = "latest"
+grype = "latest"
+trivy = "latest"
+
+[tasks."supply-chain:check"]
+description = "Verify local security/scanning tool commands"
+run = ["cosign version", "syft version", "grype version", "trivy --version"]
+
+[doctor.checks.cosign]
+description = "Sigstore cosign exists"
+run = "cosign version"
+hint = "Select supply-chain and run mise bootstrap"

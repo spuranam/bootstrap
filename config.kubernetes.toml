@@ -1,0 +1,21 @@
+#:schema https://mise.jdx.dev/schema/mise.json
+
+[tool_alias]
+# Tekton CLI has no mise registry short name; use its official GitHub releases.
+tkn = "github:tektoncd/cli"
+
+[tools]
+kubectl = "latest"
+helm = "latest"
+k9s = "latest"
+oc = "latest"
+tkn = "latest"
+
+[tasks."kubernetes:check"]
+description = "Check Kubernetes and OpenShift CLI versions (offline)"
+run = ["kubectl version --client", "helm version --short", "oc version --client", "tkn version"]
+
+[doctor.checks.kubectl]
+description = "kubectl client exists"
+run = "kubectl version --client"
+hint = "Select kubernetes and run mise bootstrap"

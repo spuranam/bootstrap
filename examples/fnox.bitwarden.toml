@@ -1,0 +1,9 @@
+# Optional Bitwarden example ONLY: copy into a PROJECT and replace the item reference.
+# Do not store a real token, Bitwarden session or provider credential here.
+env = "exec"
+
+[providers.bitwarden]
+type = "bitwarden"
+
+[secrets]
+SERVICE_API_TOKEN = { provider = "bitwarden", value = "Example Service API Token/password" }

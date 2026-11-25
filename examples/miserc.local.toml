@@ -1,0 +1,5 @@
+# Copy to ~/.config/mise/miserc.local.toml after adoption.
+# Choose only the capabilities needed by this device.
+env = ["desktop", "ai", "cloud", "kubernetes", "supply-chain"]
+# Or use one of the env_sets from miserc.toml: env = ["dev"]
+# Add "bitwarden" separately only when this device uses that provider.

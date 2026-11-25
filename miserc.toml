@@ -1,0 +1,11 @@
+#:schema https://mise.jdx.dev/schema/mise.json
+
+# Discovery-only settings must live in miserc.toml (not config.toml).
+auto_env = true
+env_conf_d = true
+
+# Named combinations are optional conveniences; any individual module works.
+[env_sets]
+dev = ["desktop", "ai", "cloud"]
+platform = ["cloud", "kubernetes", "supply-chain"]
+full = ["desktop", "ai", "cloud", "kubernetes", "supply-chain"]

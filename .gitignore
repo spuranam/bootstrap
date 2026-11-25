@@ -1,0 +1,16 @@
+# Per-device capabilities, local overrides, and secrets
+miserc.local.toml
+!examples/miserc.local.toml
+config.local.toml
+config.*.local.toml
+*.local.lock
+.env
+.env.*
+!.env.example
+fnox.toml
+!examples/fnox.toml
+!examples/fnox.*.toml
+.mise/*
+.DS_Store
+*.log
+*.zip

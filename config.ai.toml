@@ -1,0 +1,33 @@
+#:schema https://mise.jdx.dev/schema/mise.json
+
+# Opt-in AI tools; no AI provider tokens are loaded globally.
+# Repository-maintenance Agent Skills stay in .agents/skills and are not installed globally.
+[tools]
+herdr = "latest"
+opencode = "latest"
+fnox = "latest"
+
+[dotfiles]
+"~/.config/opencode/opencode.json/mise-defaults" = { source = "dotfiles/opencode/opencode.json", merge = "missing", format = "json" }
+
+[tasks."ai:check"]
+description = "Check installed AI CLI tools; no API calls"
+run = ["herdr --version", "opencode --version", "fnox --version"]
+
+[doctor.checks.herdr]
+description = "Herdr terminal UI is installed"
+run = "herdr --version"
+hint = "Select the ai module and run mise bootstrap"
+
+[doctor.checks.opencode]
+description = "OpenCode command is installed"
+run = "opencode --version"
+hint = "Select the ai module and run mise bootstrap"
+
+[tasks."ai:skills:list"]
+description = "List skills shipped with active mise tools (not this repo's .agents/skills)"
+run = "mise skills ls"
+
+[tasks."ai:opencode-with-secrets"]
+description = "Run OpenCode with secrets from this PROJECT's fnox.toml; explicitly opt in"
+run = "fnox exec -- opencode"

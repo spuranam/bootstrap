@@ -1,0 +1,10 @@
+# Optional OpenCode example using the OS keychain. Copy to a project's fnox.toml.
+# The secret is injected only into the explicitly launched child process.
+env = "exec"
+
+[providers.keychain]
+type = "keychain"
+service = "fnox"
+
+[secrets]
+OPENAI_API_KEY = { provider = "keychain", value = "OPENAI_API_KEY" }

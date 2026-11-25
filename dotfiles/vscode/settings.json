@@ -1,0 +1,12 @@
+{
+  "editor.formatOnSave": true,
+  "editor.fontFamily": "'GoMono Nerd Font Mono', Menlo, Monaco, 'Courier New', monospace",
+  "editor.fontSize": 16,
+  "editor.minimap.enabled": false,
+  "files.autoSave": "off",
+  "git.autofetch": true,
+  "security.workspace.trust.enabled": true,
+  "window.autoDetectColorScheme": true,
+  "workbench.preferredDarkColorTheme": "Visual Studio Dark",
+  "workbench.preferredLightColorTheme": "Visual Studio Light"
+}

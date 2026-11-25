@@ -1,0 +1,13 @@
+#:schema https://mise.jdx.dev/schema/mise.json
+
+# Optional Bitwarden integration. Selecting desktop, dev, or full does not
+# install or require Bitwarden; add this capability explicitly when approved.
+[tools]
+"npm:@bitwarden/cli" = "2026.11.0" # Node >=22; Desktop is a separate process
+
+[bootstrap.packages]
+"brew-cask:bitwarden" = { os = "macos", adopt = true }
+
+[tasks."bitwarden:status"]
+description = "Check Bitwarden CLI authentication without printing secrets"
+run = "bw status"

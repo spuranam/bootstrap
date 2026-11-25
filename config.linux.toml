@@ -1,0 +1,17 @@
+#:schema https://mise.jdx.dev/schema/mise.json
+
+# Automatically selected on Linux; apt and dnf skip on other distributions.
+[bootstrap.mise_shell_activate]
+bash = true
+
+[bootstrap.packages]
+"apt:git" = "latest"
+"apt:curl" = "latest"
+"apt:ca-certificates" = "latest"
+"dnf:git" = "latest"
+"dnf:curl" = "latest"
+"dnf:ca-certificates" = "latest"
+
+[dotfiles]
+"~/.bash_profile/mise-path" = { line = 'export PATH="$HOME/.local/bin:$PATH"', position = "prepend" }
+"~/.bashrc/mise-path" = { line = 'export PATH="$HOME/.local/bin:$PATH"', position = "prepend" }

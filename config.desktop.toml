@@ -1,0 +1,80 @@
+#:schema https://mise.jdx.dev/schema/mise.json
+
+# Optional GUI workstation module. Credential providers are separate opt-ins.
+# Linux vendor/Flatpak setup is documented rather than assuming Flathub.
+[bootstrap.packages]
+# The VS Code cask installs the app and links `code` and `code-tunnel` into
+# Homebrew's bin directory; desktop:vscode-check verifies all three artifacts.
+"brew-cask:visual-studio-code" = { os = "macos", adopt = true }
+"brew-cask:ghostty" = { os = "macos", adopt = true }
+"brew-cask:iterm2" = { os = "macos", adopt = true }
+"brew-cask:font-go-mono-nerd-font" = { os = "macos", adopt = true }
+
+[dotfiles]
+# Only seed when absent. Application/user edits are not overwritten.
+"~/.gitconfig/mise-vscode" = { source = "dotfiles/git/vscode.ini", merge = "missing", format = "ini" }
+"~/.config/Code/User/settings.json" = { source = "dotfiles/vscode/settings.json", mode = "copy", create_if_missing = true, variants = [
+  { os = "linux", target = "~/.config/Code/User/settings.json" },
+  { os = "macos", target = "~/Library/Application Support/Code/User/settings.json" },
+] }
+
+[tasks."desktop:vscode-extensions"]
+description = "Install approved VS Code extensions (manual opt-in)"
+run = ["code --install-extension golang.go", "code --install-extension ms-python.python", "code --install-extension charliermarsh.ruff", "code --install-extension redhat.vscode-yaml"]
+
+[tasks."desktop:vscode-check"]
+description = "Verify VS Code and its code CLI"
+run = '''
+code_path="$(command -v code)" || {
+  printf '%s\n' 'Missing VS Code CLI: code' >&2
+  exit 1
+}
+if [ "$(uname -s)" = "Darwin" ]; then
+  test -d "/Applications/Visual Studio Code.app" || {
+    printf '%s\n' 'Missing /Applications/Visual Studio Code.app' >&2
+    exit 1
+  }
+  test "$code_path" = "/opt/homebrew/bin/code" || {
+    printf 'Expected /opt/homebrew/bin/code; found %s\n' "$code_path" >&2
+    exit 1
+  }
+  command -v code-tunnel >/dev/null || {
+    printf '%s\n' 'Missing VS Code tunnel CLI: code-tunnel' >&2
+    exit 1
+  }
+fi
+printf 'code: %s\n' "$code_path"
+code --version
+'''
+
+[tasks."desktop:font-check"]
+description = "Verify the macOS Go Mono Nerd Font installation"
+run = '''
+if [ "$(uname -s)" != "Darwin" ]; then
+  printf '%s\n' 'Go Mono Nerd Font is managed only on macOS.'
+  exit 0
+fi
+font="$HOME/Library/Fonts/GoMonoNerdFontMono-Regular.ttf"
+test -f "$font" || {
+  printf 'Missing expected font: %s\n' "$font" >&2
+  exit 1
+}
+printf '%s\n' "$font"
+'''
+
+[tasks."desktop:iterm2-check"]
+description = "Verify the macOS iTerm2 installation"
+run = '''
+if [ "$(uname -s)" != "Darwin" ]; then
+  printf '%s\n' 'iTerm2 is managed only on macOS.'
+  exit 0
+fi
+app="/Applications/iTerm.app"
+test -d "$app" || {
+  printf 'Missing expected application: %s\n' "$app" >&2
+  exit 1
+}
+version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")"
+printf 'iTerm2 %s: %s\n' "$version" "$app"
+'''
+

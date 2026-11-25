@@ -1,0 +1,113 @@
+#:schema https://mise.jdx.dev/schema/mise.json
+
+# v5 global mise foundation. Keep this file usable without credentials.
+min_version = "2026.11.8"
+
+# Installing software is an explicit reviewed action in this repository.
+# Tasks, mise exec, and command-not-found handling must not install tools.
+[settings]
+auto_install = false
+
+# Lockfile generation is an explicit reviewed operation (mise lock --global).
+# Commit only mise-generated lockfiles and their reviewed dependency sidecars.
+
+[tools]
+go = "1.27.4"
+python = "3.14.10"
+node = "26"
+uv = "0.13.9"
+gh = "latest"
+jq = "latest"
+ripgrep = "latest"
+
+[env]
+# uv sees mise Python as a system interpreter. No redundant uv Python install.
+UV_PYTHON_PREFERENCE = "only-system"
+UV_PYTHON_DOWNLOADS = "manual"
+
+[dotfiles]
+# Merge conservative defaults. Never manage Git author identity here.
+"~/.gitconfig/mise-defaults" = { source = "dotfiles/git/defaults.ini", merge = "missing", format = "ini" }
+
+[tasks.bootstrap]
+description = "Post-bootstrap informational check (no login or secret access)"
+run = ["mise --version", "git --version"]
+
+[tasks."verify:core"]
+description = "Verify the cross-platform CLI foundation"
+run = ["mise --version", "git --version", "go version", "python --version", "node --version", "uv --version", "gh --version", "jq --version", "rg --version"]
+
+[tasks."verify:docs"]
+description = "Lint every repository Markdown file, including project-local Agent Skills"
+run = '''
+if ! markdownlint_root="$(mise where 'npm:markdownlint-cli@0.47.0' 2>/dev/null)"; then
+  printf '%s\n' 'Missing pinned documentation linter version 0.47.0.' >&2
+  printf '%s\n' 'Install it explicitly: mise install npm:markdownlint-cli@0.47.0' >&2
+  exit 1
+fi
+"$markdownlint_root/bin/markdownlint" --dot "**/*.md"
+'''
+
+[tasks."verify:skills"]
+description = "Validate Markdown, repository-local Agent Skills, and the catalog"
+depends = ["verify:docs"]
+run = "node \"{{ mise_config_dir }}/tools/validate-skills.mjs\""
+
+[tasks."auth:github"]
+description = "Sign in to GitHub CLI interactively; choose HTTPS or SSH task for initial transport setup"
+run = "gh auth login --hostname github.com --web"
+
+[tasks."auth:github-https"]
+description = "Sign in to GitHub CLI and configure Git to use HTTPS credentials"
+run = ["gh auth login --hostname github.com --git-protocol https --web", "gh auth setup-git --hostname github.com"]
+
+[tasks."auth:github-ssh"]
+description = "Sign in to GitHub CLI and select SSH transport without creating or uploading a key"
+run = "gh auth login --hostname github.com --git-protocol ssh --web --skip-ssh-key"
+
+[tasks."auth:github-status"]
+description = "Verify GitHub CLI authentication"
+run = "gh auth status"
+
+[tasks."auth:ssh-agent-status"]
+description = "List public identities exposed by the selected SSH agent; never prints private keys"
+run = "ssh-add -L"
+
+[tasks."auth:github-ssh-status"]
+description = "Test GitHub SSH authentication without changing known_hosts; GitHub success normally exits 1"
+run = '''
+if output="$(ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -T git@github.com 2>&1)"; then
+  status=0
+else
+  status=$?
+fi
+printf '%s\n' "$output"
+case "$output" in
+  *"successfully authenticated"*) exit 0 ;;
+  *) exit "$status" ;;
+esac
+'''
+
+[tasks."verify:config"]
+description = "Inspect the effective mise configuration"
+run = ["mise config ls", "mise bootstrap status"]
+
+[doctor.checks.git]
+description = "Git is available"
+run = "git --version"
+hint = "Install Apple CLT or apt/dnf git, then rerun mise bootstrap"
+
+[doctor.checks.python]
+description = "mise selected Python is available"
+run = "python --version"
+hint = "Run mise bootstrap --only tools"
+
+[doctor.checks.go]
+description = "mise selected Go is available"
+run = "go version"
+hint = "Run mise bootstrap --only tools"
+
+[doctor.checks.node]
+description = "mise selected Node.js is available"
+run = "node --version"
+hint = "Run mise bootstrap --only tools"

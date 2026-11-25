@@ -1,0 +1,10 @@
+# Generic OS-keychain example ONLY: copy into a PROJECT.
+# Do not store a real token or provider credential here.
+env = "exec"
+
+[providers.keychain]
+type = "keychain"
+service = "fnox"
+
+[secrets]
+SERVICE_API_TOKEN = { provider = "keychain", value = "SERVICE_API_TOKEN" }
